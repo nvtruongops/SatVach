@@ -1,0 +1,91 @@
+services:
+  # 1. Database: PostgreSQL + PostGIS
+  postgres:
+    image: postgis/postgis:15-3.3
+    container_name: satvach-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-satvach}
+      POSTGRES_USER: ${POSTGRES_USER:-admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-admin}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    networks:
+      - backend-net
+
+  # 2. Object Storage: MinIO
+  minio:
+    image: minio/minio:latest
+    container_name: satvach-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-admin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-supersecretkey}
+    volumes:
+      - minio-data:/data
+    ports:
+      - "9000:9000" # API
+      - "9001:9001" # Console UI
+    restart: unless-stopped
+    networks:
+      - backend-net
+
+  # 3. Backend: Python FastAPI
+  backend:
+    build:
+      context: ./src/backend
+      dockerfile: Dockerfile
+    container_name: satvach-api
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD:-admin}@postgres:5432/${POSTGRES_DB:-satvach}
+      S3_ENDPOINT: http://minio:9000
+      S3_ACCESS_KEY: ${MINIO_ROOT_USER:-admin}
+      S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-supersecretkey}
+      S3_BUCKET: satvach-items
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+      - minio
+    volumes:
+      - ./src/backend:/app
+    restart: unless-stopped
+    networks:
+      - backend-net
+      - frontend-net
+
+  # 4. Frontend: SolidJS + Nginx
+  frontend:
+    build:
+      context: ./src/frontend
+      dockerfile: Dockerfile
+    container_name: satvach-web
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - frontend-net
+  # 5. Cloudflare Tunnel (Optional - Uncomment to use)
+  # cloudflared:
+  #   image: cloudflare/cloudflared:latest
+  #   container_name: satvach-tunnel
+  #   command: tunnel run
+  #   environment:
+  #     TUNNEL_TOKEN: ${TUNNEL_TOKEN}
+  #   restart: unless-stopped
+  #   networks:
+  #     - frontend-net
+
+volumes:
+  postgres-data:
+  minio-data:
+
+
+networks:
+  backend-net:
+  frontend-net:
