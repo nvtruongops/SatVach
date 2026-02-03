@@ -1,0 +1,47 @@
+{
+    "mcpServers": {
+        "stitch": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "stitch-mcp"
+            ],
+            "env": {
+                "STITCH_API_KEY": "<YOUR_STITCH_API_KEY>"
+            }
+        },
+        "postgres": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@modelcontextprotocol/server-postgres",
+                "postgresql://admin:admin@localhost:5432/satvach"
+            ]
+        },
+        "filesystem": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@modelcontextprotocol/server-filesystem",
+                "<YOUR_PROJECT_PATH>"
+            ]
+        },
+        "github": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@modelcontextprotocol/server-github"
+            ],
+            "env": {
+                "GITHUB_PERSONAL_ACCESS_TOKEN": "<YOUR_GITHUB_TOKEN>"
+            }
+        },
+        "memory": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@modelcontextprotocol/server-memory"
+            ]
+        }
+    }
+}

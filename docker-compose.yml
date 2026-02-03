@@ -12,7 +12,7 @@ services:
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5432:5432"
-    restart: unless-stopped
+    restart: "no"
     networks:
       - backend-net
 
@@ -29,7 +29,7 @@ services:
     ports:
       - "9000:9000" # API
       - "9001:9001" # Console UI
-    restart: unless-stopped
+    restart: "no"
     networks:
       - backend-net
 
@@ -52,7 +52,7 @@ services:
       - minio
     volumes:
       - ./src/backend:/app
-    restart: unless-stopped
+    restart: "no"
     networks:
       - backend-net
       - frontend-net
@@ -67,10 +67,11 @@ services:
       - "80:80"
     depends_on:
       - backend
-    restart: unless-stopped
+    restart: "no"
     networks:
       - frontend-net
-  # 5. Cloudflare Tunnel (Optional - Uncomment to use)
+  # 5. Cloudflare Tunnel (Chỉ dùng khi deploy production)
+  # Uncomment khi cần expose ra internet
   # cloudflared:
   #   image: cloudflare/cloudflared:latest
   #   container_name: satvach-tunnel
@@ -78,13 +79,14 @@ services:
   #   environment:
   #     TUNNEL_TOKEN: ${TUNNEL_TOKEN}
   #   restart: unless-stopped
+  #   depends_on:
+  #     - frontend
   #   networks:
   #     - frontend-net
 
 volumes:
   postgres-data:
   minio-data:
-
 
 networks:
   backend-net:

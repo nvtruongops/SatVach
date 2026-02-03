@@ -1,17 +1,21 @@
--- Enable PostGIS extension
+-- ============================================
+-- SatVach Database Initialization
+-- PostGIS Extension + Initial Setup
+-- ============================================
+
+-- Enable PostGIS extension for spatial data
 CREATE EXTENSION IF NOT EXISTS postgis;
 
--- Create Items table
-CREATE TABLE IF NOT EXISTS items (
-    id SERIAL PRIMARY KEY,
-    title VARCHAR(255) NOT NULL,
-    description TEXT,
-    price DECIMAL(12, 2),
-    location GEOGRAPHY(POINT, 4326) NOT NULL,
-    image_url TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
+-- Enable pg_trgm for Full-Text Search (trigram matching)
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
--- Create spatial index
-CREATE INDEX IF NOT EXISTS idx_items_location ON items USING GIST(location);
+-- Enable uuid-ossp for UUID generation (useful for image filenames)
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- Verify PostGIS installation
+-- Run: SELECT PostGIS_Version();
+
+-- ============================================
+-- Note: Tables will be created via Alembic migrations
+-- This file only enables extensions
+-- ============================================
