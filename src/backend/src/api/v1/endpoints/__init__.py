@@ -1,1 +1,3 @@
-# API Endpoints Package
+"""
+SatVach API v1 Endpoints Package
+"""

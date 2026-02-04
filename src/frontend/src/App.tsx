@@ -1,4 +1,4 @@
-import type { Component } from 'solid-js';
+import type { Component } from "solid-js";
 
 const App: Component = () => {
   return (
@@ -9,12 +9,10 @@ const App: Component = () => {
         </h1>
         <p class="text-slate-400 mt-2">Bản đồ địa điểm địa phương</p>
       </header>
-      
+
       <main class="flex-1 p-6">
         <div class="rounded-2xl bg-slate-800/50 backdrop-blur border border-slate-700/50 p-8 text-center">
-          <p class="text-slate-300">
-            🗺️ Map component will be loaded here
-          </p>
+          <p class="text-slate-300">🗺️ Map component will be loaded here</p>
           <p class="text-slate-500 text-sm mt-2">
             Setup complete! Ready for development.
           </p>
