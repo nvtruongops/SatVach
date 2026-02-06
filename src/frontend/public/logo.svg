@@ -1,0 +1,21 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background Circle containing the logo -->
+  <circle cx="256" cy="256" r="256" fill="#FEF9EF"/>
+  
+  <!-- Map Pin Shape (Deep Blue) -->
+  <path d="M256 64C167.6 64 96 135.6 96 224C96 328 256 480 256 480C256 480 416 328 416 224C416 135.6 344.4 64 256 64Z" fill="#227C9D"/>
+  
+  <!-- Inner Icon Group: Shopping Cart (Cream/White) -->
+  <!-- Translated to center optically in the pin head (y=210 approx) -->
+  <g transform="translate(128, 96) scale(0.5)">
+     <!-- Simple Shopping Cart Path -->
+     <path d="M40 80H108L148 280H380L420 80H488" stroke="#FEF9EF" stroke-width="40" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+     <path d="M148 280L160 340H360L380 280" stroke="#FEF9EF" stroke-width="40" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+     <circle cx="170" cy="420" r="30" fill="#FEF9EF"/>
+     <circle cx="340" cy="420" r="30" fill="#FEF9EF"/>
+     
+     <!-- Product Accents inside basket -->
+     <rect x="180" y="140" width="80" height="100" rx="10" fill="#17C3B2"/> 
+     <circle cx="330" cy="190" r="40" fill="#FFCB77"/>
+  </g>
+</svg>

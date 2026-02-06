@@ -26,7 +26,13 @@ class Settings(BaseSettings):
     S3_BUCKET: str = "satvach-items"
 
     # CORS
-    CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:80", "http://localhost"]
+    CORS_ORIGINS: list[str] = [
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "http://localhost:80",
+        "http://localhost",
+    ]
 
     model_config = SettingsConfigDict(
         env_file=".env",

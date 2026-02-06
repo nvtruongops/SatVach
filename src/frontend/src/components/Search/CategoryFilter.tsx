@@ -2,18 +2,17 @@ import { Component, For } from "solid-js";
 import { searchStore, setCategory } from "../../stores/searchStore";
 
 const CATEGORIES = [
-  { id: "all", label: "All", icon: "🔍" },
-  { id: "food", label: "Food", icon: "🍜" },
-  { id: "cafe", label: "Cafe", icon: "☕" },
-  { id: "service", label: "Service", icon: "🛠️" },
-  { id: "entertainment", label: "Fun", icon: "🎮" },
-  { id: "shopping", label: "Shop", icon: "🛍️" },
-  { id: "parking", label: "Parking", icon: "🅿️" },
+  { id: "all", label: "All" },
+  { id: "food", label: "Food" },
+  { id: "cafe", label: "Cafe" },
+  { id: "shop", label: "Shop" },
+  { id: "travel", label: "Travel" },
+  { id: "other", label: "Other" },
 ];
 
 const CategoryFilter: Component = () => {
   return (
-    <div class="flex overflow-x-auto space-x-2 py-2 no-scrollbar w-full max-w-md">
+    <div class="flex overflow-x-auto space-x-2 py-2 no-scrollbar flex-1 min-w-0 w-full mask-linear-fade">
       <For each={CATEGORIES}>
         {(cat) => (
           <button
@@ -24,7 +23,6 @@ const CategoryFilter: Component = () => {
             }`}
             onClick={() => setCategory(cat.id)}
           >
-            <span class="mr-2">{cat.icon}</span>
             {cat.label}
           </button>
         )}

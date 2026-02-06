@@ -9,6 +9,7 @@ interface LocationState {
   isPickingLocation: boolean;
   selectedLocation: { lat: number; lng: number } | null; // For Form
   currentLocation: Location | null; // For Detail
+  userLocation: { lat: number; lng: number } | null;
 }
 
 export const [locationStore, setLocationStore] = createStore<LocationState>({
@@ -17,6 +18,7 @@ export const [locationStore, setLocationStore] = createStore<LocationState>({
   isPickingLocation: false,
   selectedLocation: null,
   currentLocation: null,
+  userLocation: null,
 });
 
 // Resource for fetching locations based on searchStore state
@@ -26,10 +28,10 @@ const fetchLocations = async (source: any) => {
   // 1. Text or Category Search (requires center for radius)
   if ((query || category !== "all") && center) {
     const params: SearchParams = {
-      lat: center.lat,
-      lng: center.lng,
+      latitude: center.lat,
+      longitude: center.lng,
       radius: radius,
-      q: query || undefined,
+      query: query || undefined,
       category: category !== "all" ? category : undefined,
     };
     return locationsApi.search(params);
@@ -80,10 +82,13 @@ export const startPickingLocation = () => {
 export const confirmPickedLocation = (coords: { lat: number; lng: number }) => {
   setLocationStore("selectedLocation", coords);
   setLocationStore("isPickingLocation", false);
-  setLocationStore("isFormOpen", true); // Re-open form
 };
 
 export const cancelPickingLocation = () => {
   setLocationStore("isPickingLocation", false);
   setLocationStore("isFormOpen", true);
+};
+
+export const setUserLocation = (coords: { lat: number; lng: number }) => {
+  setLocationStore("userLocation", coords);
 };

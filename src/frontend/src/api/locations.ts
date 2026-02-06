@@ -36,10 +36,10 @@ export interface LocationUpdate {
 }
 
 export interface SearchParams {
-  lat: number;
-  lng: number;
-  radius: number; // in meters (or km depending on backend, usually meters for PostGIS ST_DWithin if srid=4326 cast to geography, or just degrees... wait, spec says 500m-50km. Backend using ST_DWithin probably wants meters if using geography type, or degrees if geometry. Let's assume meters or whatever the backend expects. Based on SKILL.md FE-4.2 `radius=${radius}` it doesn't specify unit, but typically meters or km. BE-3.6 `ST_DWithin`. Let's assume meters.)
-  q?: string;
+  latitude: number;
+  longitude: number;
+  radius: number; // in meters
+  query?: string;
   category?: string;
 }
 
@@ -53,7 +53,12 @@ export const locationsApi = {
   getByViewport: (bbox: [number, number, number, number]) => {
     // bbox: [minLng, minLat, maxLng, maxLat]
     return apiClient.get<Location[]>("/api/v1/locations/viewport", {
-      params: { bbox: bbox.join(",") },
+      params: {
+        min_lng: bbox[0],
+        min_lat: bbox[1],
+        max_lng: bbox[2],
+        max_lat: bbox[3],
+      },
     });
   },
 

@@ -45,6 +45,7 @@ class LocationCategory(str, Enum):
     entertainment = "entertainment"
     health = "health"
     education = "education"
+    travel = "travel"
     other = "other"
 
 

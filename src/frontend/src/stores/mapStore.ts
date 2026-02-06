@@ -13,8 +13,8 @@ interface MapState {
 
 export const [mapStore, setMapStore] = createStore<MapState>({
   viewport: {
-    center: [105.8544, 21.0285], // Hanoi default
-    zoom: 12,
+    center: [106.7008, 10.7756], // District 1, Ho Chi Minh City (Ben Thanh Market area)
+    zoom: 12.5, // ~5km view height
   },
   isLoaded: false,
 });
