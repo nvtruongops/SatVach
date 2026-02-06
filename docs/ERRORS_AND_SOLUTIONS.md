@@ -26,4 +26,32 @@
 
 ---
 
-_Cập nhật: 2026-02-04_
+---
+
+## Sprint 6: Testing & Polish (TEST-1.1 → TEST-1.3)
+
+| Lỗi                                             | Root Cause                                       | Giải pháp                                                        |
+| :---------------------------------------------- | :----------------------------------------------- | :--------------------------------------------------------------- |
+| `CommandNotFoundException` (pytest)             | Chưa cài package testing                         | Thêm `pytest`, `pytest-asyncio` vào `requirements.txt` & install |
+| `TypeError: StorageService.__init__()`          | Singleton/DI initialization in testing           | Sử dụng `patch` để mock `settings` và `_get_client`              |
+| `AttributeError: ... has no attribute 'coffee'` | Typo in Test Data Enums                          | Sửa `LocationCategory.coffee` thành `LocationCategory.cafe`      |
+| `AssertionError: Longitude must be...`          | Pydantic v2 triggers `le`/`ge` before custom val | Cập nhật assert check cả message mặc định của Pydantic           |
+
+_Cập nhật: 2026-02-05_
+
+### Backend Integration Tests (Sprint 6)
+
+| Error Message                                                                                       | Cause                                                                                                                                                 | Solution                                                                                                                                                                   |
+| :-------------------------------------------------------------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `RuntimeWarning: coroutine 'Connection._cancel' was never awaited` via `pytest`                     | `pytest-asyncio` loop handling conflict with global engine or custom `event_loop` fixture.                                                            | Removed custom `event_loop` fixture. Refactored `conftest.py` to create a fresh `AsyncEngine` (test_engine) per test to ensure correct loop binding.                       |
+| `asyncpg.exceptions.UndefinedColumnError: column "latitude" of relation "locations" does not exist` | Test used raw SQL inserting `latitude` column, but proper method (PostGIS) uses `ST_MakePoint` to `geom` column using `ST_SetSRID`.                   | Updated `test_api_workflow.py` to remove `latitude/longitude` columns from raw INSERT and use `ST_SetSRID(ST_MakePoint(0,0), 4326)` for `geom`.                            |
+| `invalid input value for enum moderation_action: "SUBMITTED"`                                       | Python Enum member was uppercase (`SUBMITTED`), but Postgres Enum type expects lowercase (`submitted`). SQLAlchemy sends Member Name by default.      | Refactored `ModerationAction` Enum in `src/models/moderation_log.py` to use lowercase members (`submitted = "submitted"`). Updated usages in Service.                      |
+| `pydantic.error_wrappers.ValidationError` (implied 500) on `LocationResponse`                       | `LocationResponse` schema requires `latitude` and `longitude`, but `Location` ORM model only has `geom` (PostGIS). Pydantic couldn't extract lat/lng. | Added `latitude` and `longitude` computed properties to `Location` model using `column_property(func.ST_Y/X(func.cast(geom, Geometry)))` to expose them for serialization. |
+
+### E2E Tests (Playwright)
+
+| Error Message                                                                   | Cause                                                                                             | Solution                                                                                                                                                      |
+| :------------------------------------------------------------------------------ | :------------------------------------------------------------------------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `GL_INVALID_OPERATION: glDrawElements: Must have element array buffer bound`    | Headless Chromium in docker/CI environment often lacks full WebGL support required by MapLibreGL. | Adjusted tests to verify "Application Logic" (DOM elements, API calls via Network Mocking) instead of relying on Canvas pixel interaction (clicking markers). |
+| `Error: expect(received).toHaveTitle(expected) ... Expected pattern: /SatVach/` | Page title in `index.html` was "Sát Vách - Local Place Map" but test expected `/SatVach/`.        | Updated `visitor.spec.ts` to match the actual Vietnamese title `/Sát Vách/`.                                                                                  |
+| `TimeoutError: page.waitForResponse` in Search Test                             | Search input debounce (500ms) or Event Loop delay caused test to timeout before API call.         | Added explicit `await page.waitForTimeout(1000)` after typing keys before clicking search, or ensured assertions waited for the mock `route` to fulfill.      |

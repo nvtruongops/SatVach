@@ -7,7 +7,7 @@ from datetime import datetime
 from enum import Enum
 from typing import TYPE_CHECKING
 
-from geoalchemy2 import Geography
+from geoalchemy2 import Geography, Geometry
 from sqlalchemy import (
     DateTime,
     Integer,
@@ -18,7 +18,7 @@ from sqlalchemy import (
 from sqlalchemy import (
     Enum as SQLEnum,
 )
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship
 
 from src.db.base import Base
 
@@ -115,6 +115,10 @@ class Location(Base):
         cascade="all, delete-orphan",
         lazy="selectin",
     )
+
+    # Computed fields for Pydantic serialization
+    latitude: Mapped[float] = column_property(func.ST_Y(func.cast(geom, Geometry)))
+    longitude: Mapped[float] = column_property(func.ST_X(func.cast(geom, Geometry)))
 
     def __repr__(self) -> str:
         return f"<Location(id={self.id}, title='{self.title}', status={self.status.value})>"

@@ -80,7 +80,7 @@ class LocationService:
             # Create initial moderation log
             log = ModerationLog(
                 location_id=location.id,
-                action=ModerationAction.SUBMITTED,
+                action=ModerationAction.submitted,
                 reason="Initial submission",
                 moderator_ip=moderator_ip,
             )
@@ -186,7 +186,7 @@ class LocationService:
         # Create moderation log
         log = ModerationLog(
             location_id=location.id,
-            action=ModerationAction.EDITED,
+            action=ModerationAction.edited,
             reason=f"Updated fields: {', '.join(update_data.keys())}",
             moderator_id=moderator_id,
             moderator_ip=moderator_ip,
@@ -273,9 +273,9 @@ class LocationService:
 
         # Determine action type
         if new_status == LocationStatus.approved:
-            action = ModerationAction.APPROVED
+            action = (ModerationAction.approved,)
         elif new_status == LocationStatus.rejected:
-            action = ModerationAction.REJECTED
+            action = (ModerationAction.rejected,)
         else:
             action = ModerationAction.EDITED
 

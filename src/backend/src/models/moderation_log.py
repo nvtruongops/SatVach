@@ -20,11 +20,11 @@ if TYPE_CHECKING:
 class ModerationAction(str, Enum):
     """Types of moderation actions."""
 
-    SUBMITTED = "submitted"
-    APPROVED = "approved"
-    REJECTED = "rejected"
-    EDITED = "edited"
-    DELETED = "deleted"
+    submitted = "submitted"
+    approved = "approved"
+    rejected = "rejected"
+    edited = "edited"
+    deleted = "deleted"
 
 
 class ModerationLog(Base):

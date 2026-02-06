@@ -1,0 +1,10 @@
+{
+  "dnsLookup": 0,
+  "tcpConnect": 304.29999999981374,
+  "requestTime": 3.300000000745058,
+  "responseTime": 0.599999999627471,
+  "domInteractive": 316.5,
+  "domComplete": 1277.2000000001863,
+  "fcp": 1296,
+  "lcp": 1296
+}

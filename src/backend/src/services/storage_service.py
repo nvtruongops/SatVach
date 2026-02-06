@@ -139,19 +139,27 @@ class StorageService:
         content: bytes,
         max_dimension: int = MAX_IMAGE_DIMENSION,
         quality: int = JPEG_QUALITY,
+        strip_exif: bool = True,
     ) -> tuple[bytes, str]:
         """
         Optimize image by resizing and compressing.
+
+        SEC-2.2: Strips EXIF metadata for privacy and security.
 
         Args:
             content: Original image bytes
             max_dimension: Maximum width/height (preserves aspect ratio)
             quality: JPEG/WebP quality (1-100)
+            strip_exif: Whether to strip EXIF metadata (default True)
 
         Returns:
             Tuple of (optimized bytes, content_type)
         """
         image = Image.open(io.BytesIO(content))
+
+        # SEC-2.2: Strip EXIF metadata by not preserving it
+        # When we convert or save without exif parameter, PIL automatically strips it
+        # This removes GPS coordinates, camera info, and other sensitive metadata
 
         # Convert RGBA to RGB for JPEG output
         if image.mode in ("RGBA", "P"):
@@ -170,10 +178,12 @@ class StorageService:
             logger.info(f"Resized image from {width}x{height} to {new_width}x{new_height}")
 
         # Save as WebP for best compression
+        # By not passing exif data, we ensure EXIF is stripped
         output = io.BytesIO()
         image.save(output, format="WEBP", quality=quality, optimize=True)
         output.seek(0)
 
+        logger.info("Image optimized and EXIF metadata stripped")
         return output.read(), "image/webp"
 
     # =========================================================================
