@@ -10,15 +10,12 @@ export const imagesApi = {
   upload: (file: File) => {
     const formData = new FormData();
     formData.append("file", file);
-    return apiClient.upload<ImageUploadResponse>(
-      "/api/v1/images/upload",
-      formData,
-    );
+    return apiClient.upload<ImageUploadResponse>("/images/upload", formData);
   },
 
   getPresignedUrl: (filename: string, fileType: string) => {
     return apiClient.get<{ url: string; fields: Record<string, string> }>(
-      "/api/v1/images/presigned",
+      "/images/presigned",
       {
         params: { filename, file_type: fileType },
       },

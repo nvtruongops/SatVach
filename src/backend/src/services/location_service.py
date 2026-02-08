@@ -296,6 +296,25 @@ class LocationService:
         return location
 
     # =========================================================================
+    # Utility: Count Locations
+    # =========================================================================
+    async def count(self, db: AsyncSession, status: LocationStatus | None = None) -> int:
+        """
+        Count locations with optional status filter.
+
+        Args:
+            db: Database session
+            status: Filter by status (optional)
+
+        Returns:
+            Count of locations
+        """
+        stmt = select(func.count()).select_from(Location)
+        if status:
+            stmt = stmt.where(Location.status == status)
+        return await db.scalar(stmt) or 0
+
+    # =========================================================================
     # Utility: List All Locations (with pagination)
     # =========================================================================
     async def list_all(

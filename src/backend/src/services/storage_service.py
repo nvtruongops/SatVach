@@ -55,6 +55,7 @@ class StorageService:
     def __init__(self):
         self.bucket = settings.S3_BUCKET
         self.endpoint = settings.S3_ENDPOINT
+        self.public_endpoint = settings.S3_PUBLIC_ENDPOINT
         self.access_key = settings.S3_ACCESS_KEY
         self.secret_key = settings.S3_SECRET_KEY
 
@@ -241,7 +242,7 @@ class StorageService:
             raise StorageServiceError(f"Upload failed: {e}")
 
         # Build public URL
-        url = f"{self.endpoint}/{self.bucket}/{s3_key}"
+        url = f"{self.public_endpoint}/{self.bucket}/{s3_key}"
 
         return {
             "s3_key": s3_key,
@@ -306,10 +307,10 @@ class StorageService:
             raise StorageServiceError(f"Failed to generate URL: {e}")
 
     # =========================================================================
-    # Utility: Ensure Bucket Exists
+    # Utility: Ensure Bucket Exists and has Public Policy
     # =========================================================================
     async def ensure_bucket_exists(self) -> None:
-        """Create bucket if it doesn't exist."""
+        """Create bucket if it doesn't exist and set public policy."""
         try:
             async with await self._get_client() as s3:
                 try:
@@ -317,9 +318,37 @@ class StorageService:
                 except ClientError:
                     await s3.create_bucket(Bucket=self.bucket)
                     logger.info(f"Created bucket: {self.bucket}")
+
+                # Set public policy
+                await self.set_public_policy(s3)
+
         except ClientError as e:
             logger.error(f"Bucket check failed: {e}")
-            raise StorageServiceError(f"Bucket operation failed: {e}")
+            # Don't raise error to avoid crashing app on startup if MinIO is temporarily down
+            # raise StorageServiceError(f"Bucket operation failed: {e}")
+
+    async def set_public_policy(self, s3_client) -> None:
+        """Set public read policy for the bucket."""
+        import json
+
+        policy = {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Sid": "PublicReadGetObject",
+                    "Effect": "Allow",
+                    "Principal": "*",
+                    "Action": ["s3:GetObject"],
+                    "Resource": [f"arn:aws:s3:::{self.bucket}/*"],
+                }
+            ],
+        }
+        try:
+            await s3_client.put_bucket_policy(Bucket=self.bucket, Policy=json.dumps(policy))
+            logger.info(f"Set public read policy for bucket: {self.bucket}")
+        except ClientError as e:
+            logger.error(f"Failed to set bucket policy: {e}")
+            # Don't raise, just log
 
 
 # Singleton instance

@@ -25,24 +25,31 @@ export const [locationStore, setLocationStore] = createStore<LocationState>({
 const fetchLocations = async (source: any) => {
   const { query, category, radius, center, bbox } = source;
 
-  // 1. Text or Category Search (requires center for radius)
-  if ((query || category !== "all") && center) {
-    const params: SearchParams = {
-      latitude: center.lat,
-      longitude: center.lng,
-      radius: radius,
-      query: query || undefined,
-      category: category !== "all" ? category : undefined,
-    };
-    return locationsApi.search(params);
-  }
+  try {
+    // 1. Text or Category Search (requires center for radius)
+    if ((query || category !== "all") && center) {
+      const params: SearchParams = {
+        latitude: center.lat,
+        longitude: center.lng,
+        radius: radius,
+        query: query || undefined,
+        category: category !== "all" ? category : undefined,
+      };
+      return locationsApi.search(params);
+    }
 
-  // 2. Viewport Browse (if no specific search query)
-  if (bbox && !query) {
-    return locationsApi.getByViewport(bbox);
-  }
+    // 2. Viewport Browse (if no specific search query)
+    if (bbox && !query) {
+      return locationsApi.getByViewport(bbox);
+    }
 
-  return [];
+    return [];
+  } catch (error) {
+    // Silently fail for viewport requests to avoid spamming errors
+    // The UI will show empty results
+    console.error("Failed to fetch locations:", error);
+    return [];
+  }
 };
 
 // Create a derived signal for the resource source to trigger updates

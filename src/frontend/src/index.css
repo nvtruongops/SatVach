@@ -4,6 +4,44 @@
 @tailwind components;
 @tailwind utilities;
 
+/* TipTap Editor Styles */
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #adb5bd;
+  pointer-events: none;
+  height: 0;
+}
+
+.ProseMirror:focus {
+  outline: none;
+}
+
+.ProseMirror img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.75rem;
+  margin: 1rem 0;
+}
+
+.ProseMirror blockquote {
+  border-left: 3px solid #227c9d;
+  padding-left: 1rem;
+  color: #6b7280;
+  font-style: italic;
+}
+
+.ProseMirror hr {
+  border-top: 2px solid #e5e7eb;
+  margin: 1.5rem 0;
+}
+
+.ProseMirror mark {
+  background-color: #ffcb77;
+  padding: 0.1em 0.2em;
+  border-radius: 0.2em;
+}
+
 @layer utilities {
   .no-scrollbar::-webkit-scrollbar {
     display: none;
@@ -30,7 +68,7 @@
   }
 
   /* Toast animations */
-  @keyframes fade-in {
+  @keyframes fade-in-toast {
     from {
       opacity: 0;
       transform: translate(-50%, -20px);
@@ -41,7 +79,7 @@
     }
   }
 
-  @keyframes fade-out {
+  @keyframes fade-out-toast {
     from {
       opacity: 1;
       transform: translate(-50%, 0);
@@ -49,6 +87,29 @@
     to {
       opacity: 0;
       transform: translate(-50%, -20px);
+    }
+  }
+
+  /* General fade-in for page content */
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(-12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fade-out {
+    from {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    to {
+      opacity: 0;
+      transform: translateY(-12px);
     }
   }
 
@@ -58,6 +119,84 @@
 
   .animate-fade-out {
     animation: fade-out 0.3s ease-out forwards;
+  }
+
+  .animate-fade-in-toast {
+    animation: fade-in-toast 0.3s ease-out forwards;
+  }
+
+  .animate-fade-out-toast {
+    animation: fade-out-toast 0.3s ease-out forwards;
+  }
+
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
+  @keyframes float-slow {
+    0%,
+    100% {
+      transform: translateY(0) rotate(0deg);
+    }
+    50% {
+      transform: translateY(-15px) rotate(2deg);
+    }
+  }
+
+  @keyframes draw-line {
+    0% {
+      stroke-dashoffset: 200;
+      opacity: 0;
+    }
+    50% {
+      opacity: 1;
+    }
+    100% {
+      stroke-dashoffset: 0;
+      opacity: 0.4;
+    }
+  }
+
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .animate-float-slow {
+    animation: float-slow 5s ease-in-out infinite;
+  }
+
+  .animate-draw-line {
+    stroke-dasharray: 200;
+    animation: draw-line 8s linear infinite;
+  }
+
+  /* Nav popup animation */
+  @keyframes nav-popup-in {
+    0% {
+      opacity: 0;
+      transform: translateX(-50%) translateY(8px) scale(0.95);
+    }
+    100% {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0) scale(1);
+    }
+  }
+
+  .nav-popup-enter {
+    animation: nav-popup-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  /* Radial menu item pulse on hover */
+  .radial-item:hover .w-11 {
+    box-shadow:
+      0 0 0 3px rgba(34, 124, 157, 0.15),
+      0 10px 25px -5px rgba(0, 0, 0, 0.1);
   }
 }
 
@@ -69,3 +208,12 @@
     @apply bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white overflow-x-hidden;
   }
 }
+
+/* Circular Cropper Styles */
+.cropper-view-box,
+.cropper-face {
+  border-radius: 50%;
+}
+
+/* Optional: Hide corners/grid if desired for cleaner look */
+/* .cropper-line, .cropper-point { display: none; } */

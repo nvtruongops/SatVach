@@ -7,6 +7,8 @@ interface SearchState {
   center: { lat: number; lng: number } | null;
   bbox: [number, number, number, number] | null; // [minLng, minLat, maxLng, maxLat]
   isSearching: boolean;
+  selectedLocation: { lat: number; lng: number; name?: string } | null;
+  searchResults: any[];
 }
 
 export const [searchStore, setSearchStore] = createStore<SearchState>({
@@ -16,6 +18,8 @@ export const [searchStore, setSearchStore] = createStore<SearchState>({
   center: { lat: 21.0285, lng: 105.8544 }, // Match mapStore default
   bbox: null,
   isSearching: false,
+  selectedLocation: null,
+  searchResults: [],
 });
 
 export const setQuery = (query: string) => {
@@ -40,4 +44,14 @@ export const setBbox = (bbox: [number, number, number, number] | null) => {
 
 export const setIsSearching = (isSearching: boolean) => {
   setSearchStore("isSearching", isSearching);
+};
+
+export const setSelectedLocation = (
+  location: { lat: number; lng: number; name?: string } | null,
+) => {
+  setSearchStore("selectedLocation", location);
+};
+
+export const setSearchResults = (results: any[]) => {
+  setSearchStore("searchResults", results);
 };

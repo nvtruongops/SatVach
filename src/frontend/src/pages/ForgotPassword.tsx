@@ -1,6 +1,6 @@
 import { Component, createSignal, Show } from "solid-js";
 import { A } from "@solidjs/router";
-import Header from "../components/Layout/Header";
+import { authApi } from "../api/auth";
 
 const ForgotPassword: Component = () => {
   const [email, setEmail] = createSignal("");
@@ -31,16 +31,13 @@ const ForgotPassword: Component = () => {
     setIsLoading(true);
 
     try {
-      // TODO: Replace with actual API call when backend is ready
-      // await apiClient.post('/api/v1/auth/forgot-password', { email: email() });
-
-      // Mock API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      await authApi.forgotPassword(email());
 
       setIsSent(true);
     } catch (err: any) {
       setError(
-        err.response?.data?.detail ||
+        err.data?.detail ||
+          err.message ||
           "Failed to send reset email. Please try again.",
       );
     } finally {
@@ -54,11 +51,9 @@ const ForgotPassword: Component = () => {
   };
 
   return (
-    <div class="min-h-screen bg-brand-cream dark:bg-gray-900 overflow-hidden relative pt-6 pb-28">
-      <Header />
-
-      <div class="flex items-center justify-center min-h-[calc(100vh-64px)] px-4 sm:px-6 lg:px-8">
-        <div class="w-full max-w-md">
+    <div class="h-screen w-full bg-brand-cream dark:bg-gray-900 overflow-hidden relative flex flex-col">
+      <div class="flex-1 flex items-center justify-center p-4 min-h-0 overflow-y-auto no-scrollbar">
+        <div class="w-full max-w-md my-auto">
           {/* Glass Card */}
           <div class="bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 dark:border-gray-700 p-8 transform transition-all hover:scale-[1.01] relative">
             <div class="text-center mb-8">
@@ -129,6 +124,13 @@ const ForgotPassword: Component = () => {
                       ></path>
                     </svg>
                     Back to log in
+                  </A>
+
+                  <A
+                    href={`/reset-password?email=${encodeURIComponent(email())}`}
+                    class="inline-flex items-center justify-center w-full px-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-600 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors font-medium"
+                  >
+                    Enter Verification Code
                   </A>
 
                   <button

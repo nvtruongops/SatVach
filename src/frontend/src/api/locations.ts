@@ -45,14 +45,14 @@ export interface SearchParams {
 
 export const locationsApi = {
   search: (params: SearchParams) => {
-    return apiClient.get<Location[]>("/api/v1/locations/search", {
+    return apiClient.get<Location[]>("/locations/search", {
       params: params as any,
     });
   },
 
   getByViewport: (bbox: [number, number, number, number]) => {
     // bbox: [minLng, minLat, maxLng, maxLat]
-    return apiClient.get<Location[]>("/api/v1/locations/viewport", {
+    return apiClient.get<Location[]>("/locations/viewport", {
       params: {
         min_lng: bbox[0],
         min_lat: bbox[1],
@@ -63,18 +63,18 @@ export const locationsApi = {
   },
 
   getById: (id: string) => {
-    return apiClient.get<Location>(`/api/v1/locations/${id}`);
+    return apiClient.get<Location>(`/locations/${id}`);
   },
 
   create: (data: LocationCreate) => {
-    return apiClient.post<Location>("/api/v1/locations", data);
+    return apiClient.post<Location>("/locations", data);
   },
 
   update: (id: string, data: LocationUpdate) => {
-    return apiClient.patch<Location>(`/api/v1/locations/${id}`, data);
+    return apiClient.patch<Location>(`/locations/${id}`, data);
   },
 
   delete: (id: string) => {
-    return apiClient.delete<void>(`/api/v1/locations/${id}`);
+    return apiClient.delete<void>(`/locations/${id}`);
   },
 };

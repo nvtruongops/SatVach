@@ -1,52 +1,66 @@
 import { Component, createSignal, Show } from "solid-js";
-import { A } from "@solidjs/router";
-import Header from "../components/Layout/Header";
+import { A, useNavigate } from "@solidjs/router";
+import { useAuth } from "../context/AuthContext";
 
 const Login: Component = () => {
   // Load saved email if "Remember me" was checked
   const savedEmail = localStorage.getItem("rememberedEmail") || "";
   const wasRemembered = localStorage.getItem("rememberMe") === "true";
 
-  const [email, setEmail] = createSignal(savedEmail);
+  const [usernameOrEmail, setUsernameOrEmail] = createSignal(savedEmail);
   const [password, setPassword] = createSignal("");
   const [rememberMe, setRememberMe] = createSignal(wasRemembered);
-  const [isLoading, setIsLoading] = createSignal(false);
+  const [showPassword, setShowPassword] = createSignal(false);
   const [error, setError] = createSignal("");
 
-  const handleSubmit = (e: Event) => {
+  const { login, isLoading } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e: Event) => {
     e.preventDefault();
-    setIsLoading(true);
     setError("");
+
+    if (!usernameOrEmail()) {
+      setError("Please enter your email or username.");
+      return;
+    }
+
+    if (password().length < 6) {
+      setError("Password must be at least 6 characters.");
+      return;
+    }
 
     // Handle "Remember me" functionality
     if (rememberMe()) {
       localStorage.setItem("rememberMe", "true");
-      localStorage.setItem("rememberedEmail", email());
+      localStorage.setItem("rememberedEmail", usernameOrEmail());
     } else {
       localStorage.removeItem("rememberMe");
       localStorage.removeItem("rememberedEmail");
     }
 
-    // Mock login delay
-    setTimeout(() => {
-      setIsLoading(false);
-      // Mock error for UI review purposes
-      setError("Invalid email or password. Please try again.");
-    }, 1500);
+    try {
+      await login(usernameOrEmail(), password());
+      navigate("/");
+    } catch (err: any) {
+      const message =
+        err.data?.detail ||
+        err.message ||
+        "Invalid email or password. Please try again.";
+      setError(message);
+    }
   };
 
   return (
-    <div class="min-h-screen bg-brand-cream dark:bg-gray-900 overflow-hidden relative pt-6 pb-28">
-      <Header />
-
+    <div class="h-screen w-full bg-brand-cream dark:bg-gray-900 overflow-hidden relative flex flex-col">
       {/* Background Ambience */}
-      <div class="absolute top-0 left-0 w-full h-full overflow-hidden -z-10">
+      <div class="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
         <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-brand-teal/20 rounded-full blur-3xl animate-pulse"></div>
         <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-brand-yellow/20 rounded-full blur-3xl animate-pulse delay-700"></div>
       </div>
 
-      <div class="flex items-center justify-center min-h-[calc(100vh-64px)] px-4 sm:px-6 lg:px-8">
-        <div class="w-full max-w-md">
+      <div class="flex-1 flex items-center justify-center p-4 min-h-0 overflow-y-auto no-scrollbar">
+        <div class="w-full max-w-md my-auto">
           {/* Glass Card */}
           <div class="bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 dark:border-gray-700 p-8 transform transition-all hover:scale-[1.005] duration-300 relative">
             {/* Error Message */}
@@ -127,23 +141,24 @@ const Login: Component = () => {
             <form onSubmit={handleSubmit} class="space-y-6">
               <div>
                 <label
-                  for="email"
+                  for="usernameOrEmail"
                   class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                 >
-                  Email address
+                  Email or Username
                 </label>
                 <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autocomplete="email"
+                  id="usernameOrEmail"
+                  name="usernameOrEmail"
+                  type="text"
+                  autocomplete="username"
                   required
                   class="block w-full px-4 py-3 bg-white/50 dark:bg-gray-900/50 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all"
-                  placeholder="you@example.com"
-                  value={email()}
-                  onInput={(e) =>
-                    setEmail((e.target as HTMLInputElement).value)
-                  }
+                  placeholder="you@example.com or username"
+                  value={usernameOrEmail()}
+                  onInput={(e) => {
+                    setUsernameOrEmail((e.target as HTMLInputElement).value);
+                    if (error()) setError("");
+                  }}
                 />
               </div>
 
@@ -154,19 +169,63 @@ const Login: Component = () => {
                 >
                   Password
                 </label>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autocomplete="current-password"
-                  required
-                  class="block w-full px-4 py-3 bg-white/50 dark:bg-gray-900/50 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all"
-                  placeholder="••••••••"
-                  value={password()}
-                  onInput={(e) =>
-                    setPassword((e.target as HTMLInputElement).value)
-                  }
-                />
+                <div class="relative">
+                  <input
+                    id="password"
+                    name="password"
+                    type={showPassword() ? "text" : "password"}
+                    autocomplete="current-password"
+                    required
+                    class="block w-full px-4 py-3 bg-white/50 dark:bg-gray-900/50 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all pr-10"
+                    placeholder="••••••••"
+                    value={password()}
+                    onInput={(e) => {
+                      setPassword((e.target as HTMLInputElement).value);
+                      if (error()) setError("");
+                    }}
+                  />
+                  <button
+                    type="button"
+                    class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none"
+                    onClick={() => setShowPassword(!showPassword())}
+                  >
+                    {showPassword() ? (
+                      <svg
+                        class="h-5 w-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
+                        />
+                      </svg>
+                    ) : (
+                      <svg
+                        class="h-5 w-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                        />
+                      </svg>
+                    )}
+                  </button>
+                </div>
               </div>
 
               <div class="flex items-center justify-between text-sm">

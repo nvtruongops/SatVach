@@ -28,7 +28,11 @@ async function request<T>(
   const { params, headers, ...customConfig } = options;
 
   // 1. Build URL with query params
-  const url = new URL(`${API_BASE_URL}${endpoint}`);
+  // Handle both absolute URLs (http://...) and relative paths (/api/v1)
+  const baseUrl = API_BASE_URL.startsWith("http")
+    ? API_BASE_URL
+    : window.location.origin + API_BASE_URL;
+  const url = new URL(`${baseUrl}${endpoint}`);
   if (params) {
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined) {
@@ -37,11 +41,19 @@ async function request<T>(
     });
   }
 
-  // 2. Set default headers
+  // 2. Set default headers & Auth
+  const token = localStorage.getItem("access_token");
+  const authHeaders: Record<string, string> = {};
+
+  if (token) {
+    authHeaders["Authorization"] = `Bearer ${token}`;
+  }
+
   const config: RequestInit = {
     ...customConfig,
     headers: {
       "Content-Type": "application/json",
+      ...authHeaders,
       ...headers,
     },
   };
@@ -87,6 +99,17 @@ async function request<T>(
     if (error instanceof ApiError) {
       throw error;
     }
+
+    // Network error (e.g., ERR_CONNECTION_REFUSED)
+    if (error instanceof TypeError && error.message.includes("fetch")) {
+      throw new Error(
+        "Không thể kết nối đến server. Vui lòng kiểm tra:\n" +
+          "1. Docker Desktop đang chạy\n" +
+          "2. Backend đang chạy (docker-compose up -d)\n" +
+          "3. Port 8000 không bị chặn",
+      );
+    }
+
     throw new Error(
       error instanceof Error ? error.message : "Unknown network error",
     );
@@ -100,19 +123,19 @@ export const apiClient = {
     request<T>(endpoint, {
       ...options,
       method: "POST",
-      body: JSON.stringify(body),
+      body: body instanceof FormData ? body : JSON.stringify(body),
     }),
   put: <T>(endpoint: string, body?: any, options?: RequestOptions) =>
     request<T>(endpoint, {
       ...options,
       method: "PUT",
-      body: JSON.stringify(body),
+      body: body instanceof FormData ? body : JSON.stringify(body),
     }),
   patch: <T>(endpoint: string, body?: any, options?: RequestOptions) =>
     request<T>(endpoint, {
       ...options,
       method: "PATCH",
-      body: JSON.stringify(body),
+      body: body instanceof FormData ? body : JSON.stringify(body),
     }),
   delete: <T>(endpoint: string, options?: RequestOptions) =>
     request<T>(endpoint, { ...options, method: "DELETE" }),

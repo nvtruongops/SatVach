@@ -127,6 +127,7 @@ const Contribute: Component = () => {
                 </label>
                 <input
                   type="text"
+                  id="title"
                   required
                   class="block w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all outline-none"
                   placeholder="e.g. Broken Rice Sài Gòn"
@@ -170,6 +171,7 @@ const Contribute: Component = () => {
                   Description
                 </label>
                 <textarea
+                  id="description"
                   rows="3"
                   class="block w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all outline-none resize-none"
                   placeholder="What makes this place special?"
@@ -197,6 +199,7 @@ const Contribute: Component = () => {
                   </label>
                   <input
                     type="text"
+                    id="address"
                     class="block w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all outline-none"
                     placeholder="Street address"
                     value={formData().address}
@@ -248,6 +251,7 @@ const Contribute: Component = () => {
               >
                 <input
                   id="file-upload"
+                  name="images"
                   type="file"
                   multiple
                   accept="image/*"

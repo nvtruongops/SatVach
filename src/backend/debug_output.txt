@@ -1,0 +1,6 @@
+INFO:__main__:Checking bucket: satvach-items
+INFO:__main__:Bucket 'satvach-items' exists.
+INFO:__main__:Bucket Policy: {"Version":"2012-10-17","Statement":[{"Sid":"PublicReadGetObject","Effect":"Allow","Principal":{"AWS":["*"]},"Action":["s3:GetObject"],"Resource":["arn:aws:s3:::satvach-items/*"]}]}
+INFO:__main__:Found 3 objects.
+INFO:__main__:Sample Object Key: images/6acc2b88-798c-42f1-82f2-dc6834ce008c.webp
+INFO:__main__:Public URL should be: http://localhost:9000/satvach-items/images/6acc2b88-798c-42f1-82f2-dc6834ce008c.webp

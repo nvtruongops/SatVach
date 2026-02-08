@@ -3,6 +3,10 @@ import os
 import sys
 from logging.config import fileConfig
 
+from dotenv import load_dotenv
+
+load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env"))
+
 # Import geoalchemy2 for spatial column support in autogenerate
 import geoalchemy2  # noqa: F401
 from sqlalchemy import pool
@@ -29,11 +33,10 @@ from src.models import Image, Location, ModerationLog  # noqa: F401
 
 target_metadata = Base.metadata
 
-# get url from env if not in config
-# This allows docker-compose to override it
-db_url = os.environ.get("DATABASE_URL")
-if db_url:
-    config.set_main_option("sqlalchemy.url", db_url)
+from src.core.config import settings
+
+# Override sqlalchemy.url with the one from settings
+config.set_main_option("sqlalchemy.url", str(settings.DATABASE_URL))
 
 
 def run_migrations_offline() -> None:

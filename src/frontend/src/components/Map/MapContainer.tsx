@@ -3,7 +3,7 @@ import { useNavigate } from "@solidjs/router";
 import maplibregl, { Map as MapLibreMap } from "maplibre-gl";
 // import "maplibre-gl/dist/maplibre-gl.css"; // Moved to index.html (CDN)
 import { mapStore, updateViewport, setMapLoaded } from "../../stores/mapStore";
-import { setBbox, setCenter } from "../../stores/searchStore";
+import { searchStore, setBbox, setCenter } from "../../stores/searchStore";
 import {
   locationStore,
   locations, // The resource
@@ -108,12 +108,12 @@ export default function MapContainer() {
           // All providers failed - show error toast
           const errorToast = document.createElement("div");
           errorToast.className =
-            "fixed top-20 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 max-w-md text-center animate-fade-in";
+            "fixed top-20 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 max-w-md text-center animate-fade-in-toast";
           errorToast.textContent =
             "Unable to get your location. Please enable location services in your device settings.";
           document.body.appendChild(errorToast);
           setTimeout(() => {
-            errorToast.classList.add("animate-fade-out");
+            errorToast.classList.add("animate-fade-out-toast");
             setTimeout(() => errorToast.remove(), 300);
           }, 5000);
           return;
@@ -130,6 +130,7 @@ export default function MapContainer() {
             const location = provider.parse(data);
             if (location) {
               setUserLocation({ lat: location.lat, lng: location.lng });
+              setCenter({ lat: location.lat, lng: location.lng });
               // Don't automatically fly to IP location - keep default view
               // map?.flyTo({ center: [location.lng, location.lat], zoom: 12 });
             } else {
@@ -163,6 +164,7 @@ export default function MapContainer() {
       // e.coords is the GeolocationCoordinates object
       if (e.coords) {
         setUserLocation({ lat: e.coords.latitude, lng: e.coords.longitude });
+        setCenter({ lat: e.coords.latitude, lng: e.coords.longitude });
 
         // After getting initial position, try high accuracy in background
         if (!hasInitialPosition) {
@@ -173,6 +175,7 @@ export default function MapContainer() {
               (position) => {
                 const { latitude, longitude } = position.coords;
                 setUserLocation({ lat: latitude, lng: longitude });
+                setCenter({ lat: latitude, lng: longitude });
               },
               () => {
                 // Silently ignore - we already have a position
@@ -222,6 +225,7 @@ export default function MapContainer() {
               (position) => {
                 const { latitude, longitude } = position.coords;
                 setUserLocation({ lat: latitude, lng: longitude });
+                setCenter({ lat: latitude, lng: longitude });
                 map?.flyTo({ center: [longitude, latitude], zoom: 15 });
               },
               () => {
@@ -244,7 +248,7 @@ export default function MapContainer() {
       // Create toast notification container
       const toastContainer = document.createElement("div");
       toastContainer.className =
-        "fixed top-20 left-1/2 transform -translate-x-1/2 z-50 flex flex-col gap-2 items-center animate-fade-in";
+        "fixed top-20 left-1/2 transform -translate-x-1/2 z-50 flex flex-col gap-2 items-center animate-fade-in-toast";
 
       // Main error toast
       const toast = document.createElement("div");
@@ -271,7 +275,7 @@ export default function MapContainer() {
 
       setTimeout(
         () => {
-          toastContainer.classList.add("animate-fade-out");
+          toastContainer.classList.add("animate-fade-out-toast");
           setTimeout(() => toastContainer.remove(), 300);
         },
         showTip ? 8000 : 5000,
@@ -279,8 +283,6 @@ export default function MapContainer() {
     });
 
     map.on("load", () => {
-      setMapLoaded(true);
-
       // Proactively try IP geolocation after a short delay if GPS is slow
       // This runs in parallel with the GPS request
       setTimeout(() => {
@@ -366,8 +368,64 @@ export default function MapContainer() {
         },
       });
 
+      // MapTiler/Search results source
+      map?.addSource("search-results", {
+        type: "geojson",
+        data: {
+          type: "FeatureCollection",
+          features: [],
+        },
+      });
+
+      map?.addLayer({
+        id: "search-result-points",
+        type: "circle",
+        source: "search-results",
+        paint: {
+          "circle-color": "#EF4444", // Red for external results
+          "circle-radius": 8,
+          "circle-stroke-width": 2,
+          "circle-stroke-color": "#ffffff",
+          "circle-opacity": 0.9,
+        },
+      });
+
+      // Add click handler for search results
+      map?.on("click", "search-result-points", (e) => {
+        const feature = e.features?.[0];
+        if (!feature) return;
+
+        const coordinates = (feature.geometry as any).coordinates.slice();
+        const description = `
+          <div class="p-2 min-w-[150px]">
+            <h3 class="font-bold text-gray-900 border-b border-gray-100 pb-1 mb-1">${feature.properties?.title}</h3>
+            <p class="text-xs text-gray-500">${feature.properties?.place_name}</p>
+            <div class="mt-2 text-[10px] text-primary-600 font-semibold flex items-center gap-1">
+              <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a6 6 0 00-6 6c0 1.882.5 3.52 1.45 4.82l4.55 6.18 4.55-6.18C15.5 11.52 16 9.882 16 8a6 6 0 00-6-6zM8.5 8.5a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0z"></path></svg>
+              External POI
+            </div>
+          </div>
+        `;
+
+        new maplibregl.Popup({ closeButton: false, offset: 10 })
+          .setLngLat(coordinates)
+          .setHTML(description)
+          .addTo(map!);
+      });
+
+      map?.on("mouseenter", "search-result-points", () => {
+        map!.getCanvas().style.cursor = "pointer";
+      });
+
+      map?.on("mouseleave", "search-result-points", () => {
+        map!.getCanvas().style.cursor = "";
+      });
+
       // Handle events
       setupMapEvents();
+
+      // Set map loaded AFTER all sources and layers are initialized
+      setMapLoaded(true);
     });
 
     const setupMapEvents = () => {
@@ -464,6 +522,36 @@ export default function MapContainer() {
         setCenter({ lat: center.lat, lng: center.lng });
       });
 
+      // Search radius circle source
+      map?.addSource("search-radius", {
+        type: "geojson",
+        data: {
+          type: "Feature",
+          geometry: {
+            type: "Point",
+            coordinates: [
+              searchStore.center?.lng || 0,
+              searchStore.center?.lat || 0,
+            ],
+          },
+          properties: {},
+        },
+      });
+
+      map?.addLayer({
+        id: "search-radius-circle",
+        type: "circle",
+        source: "search-radius",
+        paint: {
+          "circle-radius": 0, // Will be updated by effect
+          "circle-color": "#3B82F6",
+          "circle-opacity": 0.1,
+          "circle-stroke-width": 2,
+          "circle-stroke-color": "#3B82F6",
+          "circle-stroke-opacity": 0.3,
+        },
+      });
+
       // Initial sync to populate stores
       map?.fire("moveend");
     };
@@ -493,14 +581,179 @@ export default function MapContainer() {
     }
   });
 
-  // Update cursor when picking location
+  // Reactively fly to selected location from search bar
   createEffect(() => {
-    if (!map) return;
-    const canvas = map.getCanvas();
-    if (locationStore.isPickingLocation) {
-      canvas.style.cursor = "crosshair";
+    const loc = searchStore.selectedLocation;
+    if (loc && map) {
+      map.flyTo({
+        center: [loc.lng, loc.lat],
+        zoom: 15,
+        essential: true,
+      });
+
+      // Add a temporary marker for the searched location
+      const el = document.createElement("div");
+      el.className = "search-marker";
+      el.innerHTML = `
+        <div class="relative flex items-center justify-center">
+          <div class="absolute w-8 h-8 bg-primary-500/20 rounded-full animate-ping"></div>
+          <div class="relative w-4 h-4 bg-primary-600 border-2 border-white rounded-full shadow-lg"></div>
+        </div>
+      `;
+
+      const marker = new maplibregl.Marker({ element: el })
+        .setLngLat([loc.lng, loc.lat])
+        .addTo(map);
+
+      // Remove marker after 5 seconds
+      setTimeout(() => marker.remove(), 5000);
+    }
+  });
+
+  // Reactively show User Location Marker (Blue Dot)
+  createEffect(() => {
+    const userLoc = locationStore.userLocation;
+    if (userLoc && map) {
+      // Check if we already have a user marker, or remove old one potentially?
+      // Ideally we keep one reference. But inside createEffect, we can use onCleanup
+
+      const el = document.createElement("div");
+      el.className = "user-location-marker";
+      el.innerHTML = `
+         <div class="relative flex items-center justify-center w-6 h-6">
+           <div class="absolute w-full h-full bg-blue-500/30 rounded-full animate-pulse"></div>
+           <div class="relative w-4 h-4 bg-blue-600 border-2 border-white rounded-full shadow-md"></div>
+         </div>
+       `;
+
+      const marker = new maplibregl.Marker({ element: el })
+        .setLngLat([userLoc.lng, userLoc.lat])
+        .addTo(map);
+
+      onCleanup(() => marker.remove());
+    }
+  });
+
+  // Reactively update search results markers (external POIs)
+  createEffect(() => {
+    // Crucial: Depend on mapStore.isLoaded to ensure source is available
+    if (!mapStore.isLoaded || !map) return;
+
+    const results = searchStore.searchResults;
+    const source = map.getSource("search-results") as maplibregl.GeoJSONSource;
+
+    if (source) {
+      console.log(
+        "Updating search-results source with",
+        results.length,
+        "features",
+      );
+      source.setData({
+        type: "FeatureCollection",
+        features: results.map((feature: any) => ({
+          type: "Feature",
+          geometry: feature.geometry,
+          properties: {
+            id: feature.id,
+            title: feature.text || feature.place_name,
+            place_name: feature.place_name,
+          },
+        })),
+      });
+
+      // Optionally fit bounds if there are many results
+      if (results.length > 0) {
+        const bounds = new maplibregl.LngLatBounds();
+        results.forEach((f: any) => bounds.extend(f.geometry.coordinates));
+        map.fitBounds(bounds, {
+          padding: 80,
+          maxZoom: 15,
+          duration: 2000,
+        });
+      }
     } else {
-      canvas.style.cursor = "";
+      console.warn("search-results source NOT FOUND despite map ready");
+    }
+  });
+
+  // Reactively update visual search radius circle
+  createEffect(() => {
+    if (!mapStore.isLoaded || !map || !map.getSource("search-radius")) return;
+
+    const center = searchStore.center;
+    const radius = searchStore.radius;
+    // Show radius circle when searching or results are visible
+    const isVisible = searchStore.searchResults.length > 0;
+
+    const source = map.getSource("search-radius") as maplibregl.GeoJSONSource;
+    if (source && center) {
+      // Update position
+      source.setData({
+        type: "Feature",
+        geometry: {
+          type: "Point",
+          coordinates: [center.lng, center.lat],
+        },
+        properties: {},
+      });
+
+      // Update visual size and visibility
+      if (isVisible) {
+        map.setPaintProperty("search-radius-circle", "circle-opacity", 0.1);
+        map.setPaintProperty(
+          "search-radius-circle",
+          "circle-stroke-opacity",
+          0.3,
+        );
+
+        // MapLibre doesn't have a direct "meter-radius" circle type,
+        // so we use an expression to approximate pixels at current zoom.
+        // approx meters per degree at equator = 111319
+        const latRad = (center.lat * Math.PI) / 180;
+        const metersPerDegree = 111319 * Math.cos(latRad);
+
+        map.setPaintProperty("search-radius-circle", "circle-radius", [
+          "interpolate",
+          ["exponential", 2],
+          ["zoom"],
+          0,
+          0,
+          20,
+          (radius / metersPerDegree) * (Math.pow(2, 20) / (40075016.686 / 360)),
+          // This is complex, but simpler is to use a GeoJSON polygon.
+          // For now, let's use a zoom-based scale that works for common levels.
+        ]);
+
+        // Actually, a better way for a REAL circle is a GeoJSON polygon.
+        // But let's refine the pixel calculation:
+        // pixel_radius = radius / (meters_per_pixel)
+        // meters_per_pixel = (40075017 * cos(lat) / 2^(zoom+8))
+
+        const zoomExpression = [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          10,
+          radius / ((40075017 * Math.cos(latRad)) / Math.pow(2, 10 + 8)),
+          15,
+          radius / ((40075017 * Math.cos(latRad)) / Math.pow(2, 15 + 8)),
+          20,
+          radius / ((40075017 * Math.cos(latRad)) / Math.pow(2, 20 + 8)),
+        ];
+
+        map.setPaintProperty(
+          "search-radius-circle",
+          "circle-radius",
+          zoomExpression,
+        );
+      } else {
+        map.setPaintProperty("search-radius-circle", "circle-opacity", 0);
+        map.setPaintProperty(
+          "search-radius-circle",
+          "circle-stroke-opacity",
+          0,
+        );
+      }
     }
   });
 

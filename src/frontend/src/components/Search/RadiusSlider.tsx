@@ -30,6 +30,7 @@ const RadiusSlider: Component = () => {
         onInput={(e) =>
           setRadius(parseInt((e.target as HTMLInputElement).value))
         }
+        name="radius-slider"
       />
       <div class="flex justify-between text-xs text-gray-500 mt-1">
         <span>500m</span>

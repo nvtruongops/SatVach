@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING
 from geoalchemy2 import Geography, Geometry
 from sqlalchemy import (
     DateTime,
+    ForeignKey,
     Integer,
     String,
     Text,
@@ -25,6 +26,7 @@ from src.db.base import Base
 if TYPE_CHECKING:
     from src.models.image import Image
     from src.models.moderation_log import ModerationLog
+    from src.models.user import User
 
 
 class LocationStatus(str, Enum):
@@ -104,6 +106,11 @@ class Location(Base):
     )
 
     # Relationships
+    user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id"), nullable=False, index=True
+    )
+    user: Mapped["User"] = relationship("User", back_populates="locations", lazy="selectin")
+
     images: Mapped[list["Image"]] = relationship(
         "Image",
         back_populates="location",

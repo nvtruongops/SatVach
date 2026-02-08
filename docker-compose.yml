@@ -40,11 +40,24 @@ services:
       dockerfile: Dockerfile
     container_name: satvach-api
     environment:
+      SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-in-production-min-32-chars}
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD:-admin}@postgres:5432/${POSTGRES_DB:-satvach}
       S3_ENDPOINT: http://minio:9000
+      S3_PUBLIC_ENDPOINT: http://localhost:9000
       S3_ACCESS_KEY: ${MINIO_ROOT_USER:-admin}
       S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-supersecretkey}
       S3_BUCKET: satvach-items
+      # Email Configuration
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      MAIL_FROM: ${MAIL_FROM}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_SERVER: ${MAIL_SERVER:-smtp.gmail.com}
+      MAIL_FROM_NAME: ${MAIL_FROM_NAME:-SatVach Support}
+      MAIL_STARTTLS: ${MAIL_STARTTLS:-True}
+      MAIL_SSL_TLS: ${MAIL_SSL_TLS:-False}
+      USE_CREDENTIALS: ${USE_CREDENTIALS:-True}
+      VALIDATE_CERTS: ${VALIDATE_CERTS:-True}
     ports:
       - "8000:8000"
     depends_on:

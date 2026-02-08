@@ -157,6 +157,7 @@ const LocationForm: Component = () => {
               </label>
               <input
                 type="text"
+                id="location-title"
                 name="title"
                 required
                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
@@ -175,6 +176,7 @@ const LocationForm: Component = () => {
                 Category
               </label>
               <select
+                id="location-category"
                 name="category"
                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 value={formData().category}
@@ -201,6 +203,7 @@ const LocationForm: Component = () => {
               </label>
               <input
                 type="text"
+                id="location-address"
                 name="address"
                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 value={formData().address}
@@ -218,6 +221,7 @@ const LocationForm: Component = () => {
                 Description
               </label>
               <textarea
+                id="location-description"
                 name="description"
                 rows="3"
                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
@@ -237,6 +241,8 @@ const LocationForm: Component = () => {
                 Images (Max 5)
               </label>
               <input
+                id="location-images"
+                name="images"
                 type="file"
                 accept="image/*"
                 multiple

@@ -6,6 +6,7 @@ import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request, status
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from slowapi import _rate_limit_exceeded_handler
@@ -27,6 +28,14 @@ async def lifespan(app: FastAPI):
     """Lifecycle events."""
     logger.info("Starting SatVach API...")
     # Optional: Initialize DB pool or S3 client checks here
+    from src.services.storage_service import storage_service
+
+    # Run bucket check in the background or await it if critical (awaiting is safer for first run)
+    try:
+        await storage_service.ensure_bucket_exists()
+    except Exception as e:
+        logger.error(f"Failed to initialize storage: {e}")
+
     yield
     logger.info("Shutting down SatVach API...")
 
@@ -61,7 +70,9 @@ async def add_security_headers(request: Request, call_next):
     response = await call_next(request)
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
-    response.headers["Content-Security-Policy"] = "default-src 'self'"
+    response.headers["Content-Security-Policy"] = (
+        "default-src 'self'; img-src 'self' data: blob: *; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' 'unsafe-eval';"
+    )
     return response
 
 
@@ -85,4 +96,14 @@ async def global_exception_handler(request: Request, exc: Exception):
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={"detail": "Internal server error"},
+    )
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """Log validation errors for debugging."""
+    logger.error(f"Validation error on {request.url}: {exc.errors()}")
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content={"detail": exc.errors()},
     )
